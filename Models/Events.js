@@ -1,16 +1,28 @@
 const mongoose = require("mongoose");
 
-// Define the Event Schema
-const EventSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String },
-  date: { type: Date, required: true },
-  location: { type: String, required: true },
-  organizer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  createdAt: { type: Date, default: Date.now }
-});
+// Schema definition using a different structure
+const eventSchemaDefinition = {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, default: "" },
+    date: { type: Date, required: true },
+    location: { type: String, required: true },
+    organizer: { 
+        type: mongoose.Types.ObjectId, 
+        ref: "User", 
+        required: true 
+    },
+    attendees: {
+        type: [{ type: mongoose.Types.ObjectId, ref: "User" }],
+        default: []
+    },
+    createdAt: {
+        type: Date,
+        default: () => new Date()
+    }
+};
 
-// Create and export the Event model
-const Event = mongoose.model("Event", EventSchema);
-module.exports = Event;
+// Creating the schema instance
+const eventSchema = new mongoose.Schema(eventSchemaDefinition, { timestamps: true });
+
+// Defining and exporting the model
+module.exports = mongoose.model("Event", eventSchema);
