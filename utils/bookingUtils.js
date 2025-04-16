@@ -19,4 +19,9 @@ function calculateTotalPrice(ticketsBooked, eventPrice) {
     validateTicketQuantity,
     updateAvailableTickets,
     revertAvailableTickets
+<<<<<<< HEAD
   };
+=======
+  };
+  
+>>>>>>> roba
