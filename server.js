@@ -2,7 +2,8 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./Routes/userRoutes');
+const eventRoutes = require('./Routes/events.js');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api', eventRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -45,4 +47,12 @@ app.listen(PORT, () => {
     console.log('   - GET  /api/users/profile     - Get user profile');
     console.log('   - PUT  /api/users/profile     - Update profile');
     console.log('   - DEL  /api/users/profile     - Delete account');
+    console.log('\n   Events:');
+    console.log('   - GET  /api/v1/events         - Get all events');
+    console.log('   - GET  /api/v1/events/:id     - Get event by ID');
+    console.log('   - POST /api/v1/events         - Create event (Organizer)');
+    console.log('   - PUT  /api/v1/events/:id     - Update event (Organizer)');
+    console.log('   - DEL  /api/v1/events/:id     - Delete event (Organizer)');
+    console.log('   - PUT  /api/v1/events/:id/status - Update event status (Admin)');
+    console.log('   - GET  /api/v1/users/events/analytics - Get event analytics (Organizer)');
 });
