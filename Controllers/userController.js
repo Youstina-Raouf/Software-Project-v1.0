@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const User = require('../Models/Users');
+const Booking = require('../Models/Bookings');
+const Event = require('../Models/Events');
 
 // @desc    Register new user
 // @route   POST /api/users/register
@@ -37,10 +39,11 @@ const registerUser = async (req, res) => {
         // Create user
         const user = await User.create({
             username,
-            email,
+            email: email.toLowerCase(),
             password: hashedPassword,
             firstName,
-            lastName
+            lastName,
+            role: 'Standard'  // Default role
         });
 
         if (user) {
@@ -123,6 +126,63 @@ const loginUser = async (req, res) => {
     }
 };
 
+// @desc    Reset password
+// @route   PUT /api/users/forgetPassword
+// @access  Public
+const forgetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: 'Please provide email and new password' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(400).json({
+            message: 'Password reset failed',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Admin
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving users', error: error.message });
+    }
+};
+
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Admin
+const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving user', error: error.message });
+    }
+};
+
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
@@ -165,26 +225,21 @@ const getUserProfile = async (req, res) => {
 const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Update fields
         user.firstName = req.body.firstName || user.firstName;
         user.lastName = req.body.lastName || user.lastName;
         user.email = req.body.email || user.email;
-        user.username = req.body.username || user.username;
         user.profilePicture = req.body.profilePicture || user.profilePicture;
 
-        // If password is provided, hash it
         if (req.body.password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(req.body.password, salt);
         }
 
         const updatedUser = await user.save();
-
         res.json({
             message: 'Profile updated successfully',
             user: {
@@ -195,15 +250,11 @@ const updateUserProfile = async (req, res) => {
                 lastName: updatedUser.lastName,
                 fullName: updatedUser.fullName,
                 role: updatedUser.role,
-                profilePicture: updatedUser.profilePicture,
-                token: generateToken(updatedUser._id)
+                profilePicture: updatedUser.profilePicture
             }
         });
     } catch (error) {
-        res.status(400).json({ 
-            message: 'Profile update failed', 
-            error: error.message 
-        });
+        res.status(400).json({ message: 'Error updating profile', error: error.message });
     }
 };
 
@@ -213,37 +264,127 @@ const updateUserProfile = async (req, res) => {
 const deleteUserAccount = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Soft delete - just deactivate the account
         user.isActive = false;
         await user.save();
-
         res.json({ message: 'Account deactivated successfully' });
     } catch (error) {
-        res.status(400).json({ 
-            message: 'Account deactivation failed', 
-            error: error.message 
-        });
+        res.status(400).json({ message: 'Error deactivating account', error: error.message });
     }
 };
 
-// Generate JWT
+// @desc    Update user role
+// @route   PUT /api/users/:id
+// @access  Admin
+const updateUserRole = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.role = req.body.role || user.role;
+        const updatedUser = await user.save();
+
+        res.json({
+            message: 'User role updated successfully',
+            user: {
+                _id: updatedUser._id,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                role: updatedUser.role
+            }
+        });
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating user role', error: error.message });
+    }
+};
+
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Admin
+const deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        await user.remove();
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting user', error: error.message });
+    }
+};
+
+// @desc    Get user bookings
+// @route   GET /api/users/bookings
+// @access  Private
+const getUserBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({ user: req.user._id })
+            .populate('event', 'title date location');
+        res.json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving bookings', error: error.message });
+    }
+};
+
+// @desc    Get user events
+// @route   GET /api/users/events
+// @access  Organizer
+const getUserEvents = async (req, res) => {
+    try {
+        const events = await Event.find({ organizer: req.user._id });
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving events', error: error.message });
+    }
+};
+
+// @desc    Get user events analytics
+// @route   GET /api/users/events/analytics
+// @access  Organizer
+const getUserAnalytics = async (req, res) => {
+    try {
+        const events = await Event.find({ organizer: req.user._id });
+        
+        const analytics = events.map(event => ({
+            eventId: event._id,
+            title: event.title,
+            totalTickets: event.totalTickets,
+            bookedTickets: event.totalTickets - event.remainingTickets,
+            percentageBooked: ((event.totalTickets - event.remainingTickets) / event.totalTickets * 100).toFixed(2) + '%'
+        }));
+
+        res.json(analytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving analytics', error: error.message });
+    }
+};
+
+// Helper function to generate JWT token
 const generateToken = (id) => {
-    return jwt.sign(
-        { id }, 
-        process.env.JWT_SECRET || 'helloworld', 
-        { expiresIn: '30d' }
-    );
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
 };
 
 module.exports = {
     registerUser,
     loginUser,
+    forgetPassword,
+    getAllUsers,
     getUserProfile,
     updateUserProfile,
-    deleteUserAccount
+    deleteUserAccount,
+    getUserById,
+    updateUserRole,
+    deleteUser,
+    getUserBookings,
+    getUserEvents,
+    getUserAnalytics
 };

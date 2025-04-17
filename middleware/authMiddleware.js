@@ -1,100 +1,70 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../Models/Users');
 
 /**
- * Protect routes - Authentication middleware
- * Verifies JWT token and adds user to request object
+ * Protect routes - Auth middleware
+ * Verifies JWT token and attaches user to request
  */
 const protect = async (req, res, next) => {
-    try {
-        let token;
+  try {
+    let token;
 
-        // Check for token in Authorization header
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            try {
-                // Get token from header
-                token = req.headers.authorization.split(' ')[1];
+    // Get token from Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'helloworld');
 
-                // Verify token
-                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'helloworld');
+      // Attach user (excluding password)
+      req.user = await User.findById(decoded.id).select('-password');
 
-                // Get user from token (exclude password)
-                req.user = await User.findById(decoded.id).select('-password');
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
 
-                if (!req.user) {
-                    return res.status(401).json({
-                        message: 'Not authorized, user not found'
-                    });
-                }
+      if (!req.user.isActive) {
+        return res.status(401).json({ message: 'Account is deactivated' });
+      }
 
-                // Check if user is active
-                if (!req.user.isActive) {
-                    return res.status(401).json({
-                        message: 'Account is deactivated'
-                    });
-                }
-
-                next();
-            } catch (error) {
-                console.error('Token verification failed:', error.message);
-                return res.status(401).json({
-                    message: 'Not authorized, token failed',
-                    error: error.message
-                });
-            }
-        }
-
-        if (!token) {
-            return res.status(401).json({
-                message: 'Not authorized, no token provided'
-            });
-        }
-    } catch (error) {
-        console.error('Authentication error:', error.message);
-        res.status(500).json({
-            message: 'Authentication failed',
-            error: error.message
-        });
+      next();
+    } else {
+      return res.status(401).json({ message: 'No token provided' });
     }
+  } catch (error) {
+    console.error('Auth error:', error.message);
+    res.status(401).json({ message: 'Invalid token', error: error.message });
+  }
 };
 
-/**
- * Role-based authorization middleware
- * Checks if user has required role
- */
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                message: 'User not authenticated'
-            });
-        }
-
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                message: `Role ${req.user.role} is not authorized to access this route`
-            });
-        }
-
-        next();
-    };
-};
-
-/**
- * Admin check middleware
- * Verifies if user has admin role
- */
-const isAdmin = (req, res, next) => {
-    if (!req.user || req.user.role !== 'admin') {
-        return res.status(403).json({
-            message: 'Not authorized as admin'
-        });
-    }
+// Admin middleware
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'Admin') {
     next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as admin' });
+  }
+};
+
+// Organizer middleware
+const organizer = (req, res, next) => {
+  if (req.user && req.user.role === 'Organizer') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as organizer' });
+  }
+};
+
+// Standard user middleware
+const user = (req, res, next) => {
+  if (req.user && req.user.role === 'Standard') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as standard user' });
+  }
 };
 
 module.exports = {
-    protect,
-    authorize,
-    isAdmin
+  protect,
+  admin,
+  organizer,
+  user
 };
