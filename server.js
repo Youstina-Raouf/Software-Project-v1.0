@@ -7,6 +7,8 @@ const eventRoutes = require('./Routes/events.js');
 
 const app = express();
 
+app.use('/api/v1', userRoutes);
+
 // Middleware
 app.use(express.json());
 
