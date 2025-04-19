@@ -1,48 +1,51 @@
 const mongoose = require('mongoose');
 const Booking = require('../models/bookingModel');
-const { calculateTotalPrice, validateTicketQuantity } = require('../utils/bookingUtils');
+const Event = require('../models/eventModel');
+const { 
+  calculateTotalPrice, 
+  validateTicketQuantity, 
+  updateAvailableTickets, 
+  revertAvailableTickets 
+} = require('../utils/bookingUtils');
 
+// BOOK a ticket
 exports.bookTicket = async (req, res) => {
   try {
     const { eventId, ticketsBooked } = req.body;
+    const userId = req.user._id;
 
-    // Make sure userId is an actual valid ObjectId (use real ObjectId here)
-    const userId = mongoose.Types.ObjectId("60d5f9b3f8d4f8b34f84e2bb"); // Replace with your actual MongoDB ObjectId
-
-    // For debugging purposes, let's log the userId and eventId
-    console.log("UserId:", userId);
-    console.log("EventId:", eventId);
-    console.log("TicketsBooked:", ticketsBooked);
-
-    const eventPrice = 100;  // Replace with actual event price from your event model
-    const availableTickets = 100; // Replace with actual available tickets from your event model
-
-    // Check if tickets are available
-    if (!validateTicketQuantity(ticketsBooked, availableTickets)) {
-      return res.status(400).json({ error: 'Not enough tickets available.' });
+    // Fetch event details
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Calculate total price
-    const totalPrice = calculateTotalPrice(ticketsBooked, eventPrice);
+    // Check ticket availability
+    if (!validateTicketQuantity(ticketsBooked, event.remainingTickets)) {
+      return res.status(400).json({ error: 'Not enough tickets available' });
+    }
 
-    // Create the booking in the database
+    const totalPrice = calculateTotalPrice(ticketsBooked, event.price);
+
+    // Create booking
     const booking = await Booking.create({
-      user: userId,  // Should be valid ObjectId here
-      event: eventId, // Should be valid eventId
+      user: userId,
+      event: eventId,
       ticketsBooked,
       totalPrice,
       status: 'Confirmed'
     });
 
-    // Respond with success
-    res.status(201).json({ message: 'Booking successful', booking });
+    // Update event ticket count
+    event.remainingTickets = updateAvailableTickets(event.remainingTickets, ticketsBooked);
+    await event.save();
 
+    res.status(201).json({ message: 'Booking successful', booking });
   } catch (err) {
     console.error("Error creating booking:", err);
     res.status(500).json({ error: 'Booking failed', details: err.message });
   }
 };
-
 
 // CANCEL a booking
 exports.cancelBooking = async (req, res) => {
@@ -50,10 +53,16 @@ exports.cancelBooking = async (req, res) => {
     const booking = await Booking.findById(req.params.id);
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
+    // Find the event
+    const event = await Event.findById(booking.event);
+    if (!event) return res.status(404).json({ error: 'Associated event not found' });
+
+    // Update event tickets
+    event.remainingTickets = revertAvailableTickets(event.remainingTickets, booking.ticketsBooked);
+    await event.save();
+
     booking.status = 'Cancelled';
     await booking.save();
-
-    //  increase tickets in Event model
 
     res.status(200).json({ message: 'Booking cancelled successfully' });
   } catch (err) {
@@ -64,10 +73,8 @@ exports.cancelBooking = async (req, res) => {
 // VIEW user bookings
 exports.getUserBookings = async (req, res) => {
   try {
-    // TEMP user ID — use req.user._id later
-    const userId = "643b3f3af9e57a001ed18420"; // TEMP valid ObjectId
+    const userId = req.user._id;
 
-    
     const bookings = await Booking.find({ user: userId }).populate('event');
     res.status(200).json(bookings);
   } catch (err) {
@@ -75,8 +82,7 @@ exports.getUserBookings = async (req, res) => {
   }
 };
 
-// GET booking by ID //GET /api/v1/bookings/:id
-
+// GET booking by ID
 exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id).populate('event');

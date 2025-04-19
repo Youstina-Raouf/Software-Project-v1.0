@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {
-  bookTickets,
+  bookTicket,
   getBookingById,
   cancelBooking,
-} = require('../controllers/bookingController');
+  getUserBookings
+} = require('../Controllers/bookingController');
 
 const { protect, user } = require('../middleware/authMiddleware');
 
@@ -18,7 +19,7 @@ const { protect, user } = require('../middleware/authMiddleware');
  * @desc    Book tickets for an event
  * @access  User
  */
-router.post('/', protect, user, bookTickets);
+router.post('/', protect, user, bookTicket);
 
 /**
  * @route   GET /api/v1/bookings/:id
@@ -33,5 +34,12 @@ router.get('/:id', protect, user, getBookingById);
  * @access  User
  */
 router.delete('/:id', protect, user, cancelBooking);
+
+/**
+ * @route   GET /api/v1/users/bookings
+ * @desc    Get current user's bookings
+ * @access  User
+ */
+router.get('/users/bookings', protect, user, getUserBookings);
 
 module.exports = router;
