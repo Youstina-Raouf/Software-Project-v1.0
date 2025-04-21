@@ -1,6 +1,16 @@
 const Event = require('../Models/Events');
 
-// 📌 Get all events (Public)
+// 📌 Get approved events (Public)
+exports.getEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: 'approved' });
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving events", error: error.message });
+  }
+};
+
+// 📌 Get all events (Admin only)
 exports.getAllEvents = async (req, res) => {
   try {
     const events = await Event.find();
@@ -52,27 +62,63 @@ exports.createEvent = async (req, res) => {
 
 // 📌 Update event (Organizer only)
 exports.updateEvent = async (req, res) => {
-  const { date, location, totalTickets } = req.body;
+  const { title, description, date, location, totalTickets, price } = req.body;
 
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    if (!req.user || req.user.role !== 'Organizer' || event.organizer.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "You can only update your own events" });
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
-    event.date = date || event.date;
-    event.location = location || event.location;
+    // If user is admin, allow update
+    if (req.user.role === 'Admin') {
+      // Update fields if they are provided in the request
+      if (title) event.title = title;
+      if (description) event.description = description;
+      if (date) event.date = date;
+      if (location) event.location = location;
+      if (price) event.price = price;
 
-    if (totalTickets) {
-      const diff = totalTickets - event.totalTickets;
-      event.totalTickets = totalTickets;
-      event.remainingTickets += diff;
+      // Handle totalTickets update and adjust remainingTickets accordingly
+      if (totalTickets) {
+        const diff = totalTickets - event.totalTickets;
+        event.totalTickets = totalTickets;
+        event.remainingTickets += diff;
+      }
+
+      await event.save();
+      return res.status(200).json({ message: "Event updated successfully", event });
     }
 
-    await event.save();
-    res.status(200).json({ message: "Event updated successfully", event });
+    // If user is organizer, they can only update their own events
+    if (req.user.role === 'Organizer') {
+      if (event.organizer.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "You can only update your own events" });
+      }
+
+      // Update fields if they are provided in the request
+      if (title) event.title = title;
+      if (description) event.description = description;
+      if (date) event.date = date;
+      if (location) event.location = location;
+      if (price) event.price = price;
+
+      // Handle totalTickets update and adjust remainingTickets accordingly
+      if (totalTickets) {
+        const diff = totalTickets - event.totalTickets;
+        event.totalTickets = totalTickets;
+        event.remainingTickets += diff;
+      }
+
+      await event.save();
+      return res.status(200).json({ message: "Event updated successfully", event });
+    }
+
+    // If user is neither admin nor organizer
+    return res.status(403).json({ message: "Not authorized as organizer or admin" });
   } catch (error) {
     res.status(500).json({ message: "Error updating event", error: error.message });
   }
@@ -88,7 +134,7 @@ exports.deleteEvent = async (req, res) => {
       return res.status(403).json({ message: "You can only delete your own events" });
     }
 
-    await event.remove();
+    await Event.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Event deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting event", error: error.message });

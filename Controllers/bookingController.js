@@ -14,15 +14,25 @@ exports.bookTicket = async (req, res) => {
     const { eventId, ticketsBooked } = req.body;
     const userId = req.user._id;
 
+    // Validate input
+    if (!eventId || !ticketsBooked) {
+      return res.status(400).json({ message: "Please provide eventId and ticketsBooked" });
+    }
+
     // Fetch event details
     const event = await Event.findById(eventId);
     if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Check if event is approved
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: "Cannot book tickets for unapproved events" });
     }
 
     // Check ticket availability
     if (!validateTicketQuantity(ticketsBooked, event.remainingTickets)) {
-      return res.status(400).json({ error: 'Not enough tickets available' });
+      return res.status(400).json({ message: "Not enough tickets available" });
     }
 
     const totalPrice = calculateTotalPrice(ticketsBooked, event.price);
@@ -40,10 +50,23 @@ exports.bookTicket = async (req, res) => {
     event.remainingTickets = updateAvailableTickets(event.remainingTickets, ticketsBooked);
     await event.save();
 
-    res.status(201).json({ message: 'Booking successful', booking });
-  } catch (err) {
-    console.error("Error creating booking:", err);
-    res.status(500).json({ error: 'Booking failed', details: err.message });
+    res.status(201).json({
+      message: "Booking created successfully",
+      booking: {
+        _id: booking._id,
+        event: {
+          title: event.title,
+          date: event.date,
+          location: event.location
+        },
+        ticketsBooked,
+        totalPrice,
+        status: booking.status
+      }
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).json({ message: "Error creating booking", error: error.message });
   }
 };
 
@@ -92,3 +115,69 @@ exports.getBookingById = async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve booking', details: err.message });
   }
 };
+
+// Create a new booking
+exports.createBooking = async (req, res) => {
+  try {
+    const { eventId, numberOfTickets } = req.body;
+
+    // Validate input
+    if (!eventId || !numberOfTickets) {
+      return res.status(400).json({ message: "Please provide eventId and numberOfTickets" });
+    }
+
+    // Find the event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Check if event is approved
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: "Cannot book tickets for unapproved events" });
+    }
+
+    // Check if enough tickets are available
+    if (event.remainingTickets < numberOfTickets) {
+      return res.status(400).json({ message: "Not enough tickets available" });
+    }
+
+    // Calculate total price
+    const totalPrice = event.price * numberOfTickets;
+
+    // Create booking
+    const booking = new Booking({
+      user: req.user._id,
+      event: eventId,
+      numberOfTickets,
+      totalPrice,
+      status: 'confirmed'
+    });
+
+    // Save booking
+    await booking.save();
+
+    // Update event's remaining tickets
+    event.remainingTickets -= numberOfTickets;
+    await event.save();
+
+    res.status(201).json({
+      message: "Booking created successfully",
+      booking: {
+        _id: booking._id,
+        event: {
+          title: event.title,
+          date: event.date,
+          location: event.location
+        },
+        numberOfTickets,
+        totalPrice,
+        status: booking.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating booking", error: error.message });
+  }
+};
+
+

@@ -38,15 +38,11 @@ const registerUser = async (req, res) => {
             });
         }
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create user
+        // Create user (password will be hashed by the pre-save hook)
         const user = await User.create({
             username,
             email: email.toLowerCase(),
-            password: hashedPassword,
+            password,
             firstName,
             lastName,
             role: role || 'Standard'  // Default role if not provided
@@ -62,8 +58,8 @@ const registerUser = async (req, res) => {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     fullName: user.fullName,
-                    role: user.role,  // Return the role as part of the response
-                    token: generateToken(user._id)  // Assuming generateToken is implemented elsewhere
+                    role: user.role,
+                    token: generateToken(user._id)
                 }
             });
         }
@@ -154,6 +150,43 @@ const forgetPassword = async (req, res) => {
         await user.save();
 
         res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(400).json({
+            message: 'Password reset failed',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Reset password with OTP
+// @route   POST /api/users/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ message: 'Please provide email, OTP, and new password' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify OTP (you should implement proper OTP verification logic here)
+        // For now, we'll just check if the OTP matches a stored value
+        if (user.resetPasswordOTP !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.resetPasswordOTP = null; // Clear the OTP after successful reset
+        await user.save();
+
+        res.json({ message: 'Password reset successful' });
     } catch (error) {
         res.status(400).json({
             message: 'Password reset failed',
@@ -319,7 +352,7 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        await user.remove();
+        await User.findByIdAndDelete(req.params.id);
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting user', error: error.message });
@@ -332,7 +365,9 @@ const deleteUser = async (req, res) => {
 const getUserBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ user: req.user._id })
-            .populate('event', 'title date location');
+            .populate('event', 'title date location price')
+            .sort({ createdAt: -1 });
+
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving bookings', error: error.message });
@@ -341,13 +376,58 @@ const getUserBookings = async (req, res) => {
 
 // @desc    Get user events
 // @route   GET /api/users/events
-// @access  Organizer
+// @access  Event Organizer
 const getUserEvents = async (req, res) => {
     try {
-        const events = await Event.find({ organizer: req.user._id });
+        const events = await Event.find({ organizer: req.user._id })
+            .sort({ date: -1 }); // Sort by date in descending order
+
         res.json(events);
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving events', error: error.message });
+    }
+};
+
+// @desc    Get user analytics
+// @route   GET /api/users/events/analytics
+// @access  Event Organizer
+const getUserAnalytics = async (req, res) => {
+    try {
+        // Get all events organized by the user
+        const events = await Event.find({ organizer: req.user._id });
+
+        // Calculate analytics
+        const analytics = {
+            totalEvents: events.length,
+            activeEvents: events.filter(event => event.status === 'active').length,
+            pendingEvents: events.filter(event => event.status === 'pending').length,
+            totalTickets: events.reduce((acc, event) => acc + event.totalTickets, 0),
+            totalBookedTickets: events.reduce((acc, event) => acc + (event.totalTickets - event.remainingTickets), 0),
+            revenue: events.reduce((acc, event) => {
+                const bookedTickets = event.totalTickets - event.remainingTickets;
+                return acc + (bookedTickets * event.price);
+            }, 0)
+        };
+
+        // Calculate booking percentage
+        analytics.bookingPercentage = analytics.totalTickets > 0
+            ? ((analytics.totalBookedTickets / analytics.totalTickets) * 100).toFixed(2) + '%'
+            : '0%';
+
+        // Get event-wise analytics
+        analytics.events = events.map(event => ({
+            id: event._id,
+            title: event.title,
+            status: event.status,
+            totalTickets: event.totalTickets,
+            bookedTickets: event.totalTickets - event.remainingTickets,
+            revenue: (event.totalTickets - event.remainingTickets) * event.price,
+            bookingPercentage: ((event.totalTickets - event.remainingTickets) / event.totalTickets * 100).toFixed(2) + '%'
+        }));
+
+        res.json(analytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving analytics', error: error.message });
     }
 };
 
@@ -355,6 +435,7 @@ module.exports = {
     registerUser,
     loginUser,
     forgetPassword,
+    resetPassword,
     getAllUsers,
     getUserById,
     getUserProfile,
@@ -363,5 +444,6 @@ module.exports = {
     updateUserRole,
     deleteUser,
     getUserBookings,
-    getUserEvents
+    getUserEvents,
+    getUserAnalytics
 };

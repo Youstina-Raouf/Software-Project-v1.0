@@ -17,29 +17,29 @@ const { protect, user } = require('../middleware/authMiddleware');
 /**
  * @route   POST /api/v1/bookings
  * @desc    Book tickets for an event
- * @access  User
+ * @access  Protected (Standard User)
  */
-router.post('/', protect, user, bookTicket);
+router.post('/v1/bookings', protect, user, bookTicket);
 
 /**
  * @route   GET /api/v1/bookings/:id
  * @desc    Get booking details by ID
- * @access  User
+ * @access  Protected (User)
  */
-router.get('/:id', protect, user, getBookingById);
+router.get('/v1/bookings/:id', protect, user, getBookingById);
 
 /**
  * @route   DELETE /api/v1/bookings/:id
  * @desc    Cancel a booking
- * @access  User
+ * @access  Protected (User)
  */
-router.delete('/:id', protect, user, cancelBooking);
+router.delete('/v1/bookings/:id', protect, user, cancelBooking);
 
 /**
- * @route   GET /api/v1/users/bookings
+ * @route   GET /api/v1/bookings/user/bookings
  * @desc    Get current user's bookings
- * @access  User
+ * @access  Protected (User)
  */
-router.get('/users/bookings', protect, user, getUserBookings);
+router.get('/v1/users/bookings', protect, user, getUserBookings);
 
 module.exports = router;
