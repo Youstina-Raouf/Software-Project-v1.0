@@ -138,4 +138,4 @@ router.put('/:id', protect, admin, updateUserRole);
  */
 router.delete('/:id', protect, admin, deleteUser);
 
-module.exports = router;
+module.exports = router;

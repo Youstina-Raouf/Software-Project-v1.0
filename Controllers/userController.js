@@ -3,13 +3,19 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/Users');
 const Booking = require('../Models/Bookings');
 const Event = require('../Models/Events');
+const { sendOTPEmail } = require("../utils/bookingUtils");
+
+// Generate JWT token
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+};
 
 // @desc    Register new user
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { username, email, password, firstName, lastName } = req.body;
+        const { username, email, password, firstName, lastName, role } = req.body;
 
         // Validation
         if (!username || !email || !password) {
@@ -43,7 +49,7 @@ const registerUser = async (req, res) => {
             password: hashedPassword,
             firstName,
             lastName,
-            role: 'Standard'  // Default role
+            role: role || 'Standard'  // Default role if not provided
         });
 
         if (user) {
@@ -56,8 +62,8 @@ const registerUser = async (req, res) => {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     fullName: user.fullName,
-                    role: user.role,
-                    token: generateToken(user._id)
+                    role: user.role,  // Return the role as part of the response
+                    token: generateToken(user._id)  // Assuming generateToken is implemented elsewhere
                 }
             });
         }
@@ -113,9 +119,9 @@ const loginUser = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 fullName: user.fullName,
-                role: user.role,
+                role: user.role,  // Include the role in the response
                 profilePicture: user.profilePicture,
-                token: generateToken(user._id)
+                token: generateToken(user._id)  // Assuming generateToken is implemented elsewhere
             }
         });
     } catch (error) {
@@ -345,105 +351,17 @@ const getUserEvents = async (req, res) => {
     }
 };
 
-// @desc    Get user events analytics
-// @route   GET /api/users/events/analytics
-// @access  Organizer
-const getUserAnalytics = async (req, res) => {
-    try {
-        const events = await Event.find({ organizer: req.user._id });
-        
-        const analytics = events.map(event => ({
-            eventId: event._id,
-            title: event.title,
-            totalTickets: event.totalTickets,
-            bookedTickets: event.totalTickets - event.remainingTickets,
-            percentageBooked: ((event.totalTickets - event.remainingTickets) / event.totalTickets * 100).toFixed(2) + '%'
-        }));
-
-        res.json(analytics);
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving analytics', error: error.message });
-    }
-};
-
-// Helper function to generate JWT token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
-};
-
 module.exports = {
     registerUser,
     loginUser,
     forgetPassword,
     getAllUsers,
+    getUserById,
     getUserProfile,
     updateUserProfile,
     deleteUserAccount,
-    getUserById,
     updateUserRole,
     deleteUser,
     getUserBookings,
-    getUserEvents,
-    getUserAnalytics
-};
-//bonus
-const crypto = require("crypto");
-const { sendOTPEmail } = require("../utils/bookingUtils");
-
-// Generate and send OTP
-const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  user.otp = otp;
-  user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-  await user.save();
-
-  await sendOTPEmail(email, otp);
-
-  res.status(200).json({ message: "OTP sent to email" });
-};
-
-// Verify OTP and reset password
-const resetPassword = async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  if (user.otp !== otp || Date.now() > user.otpExpiry)
-    return res.status(400).json({ message: "Invalid or expired OTP" });
-
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(newPassword, salt);
-  user.otp = undefined;
-  user.otpExpiry = undefined;
-  await user.save();
-
-  res.status(200).json({ message: "Password reset successful" });
-};
-
-// 👇 Export the two OTP functions
-module.exports = {
-  registerUser,
-  loginUser,
-  forgetPassword,
-  getAllUsers,
-  getUserProfile,
-  updateUserProfile,
-  deleteUserAccount,
-  getUserById,
-  updateUserRole,
-  deleteUser,
-  getUserBookings,
-  getUserEvents,
-  getUserAnalytics,
-  forgotPassword,
-  resetPassword
+    getUserEvents
 };
