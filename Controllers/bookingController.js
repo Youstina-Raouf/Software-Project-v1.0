@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const Booking = require('../models/bookingModel');
-const Event = require('../models/eventModel');
+const Booking = require('../Models/Bookings');
+const Event = require('../Models/Events');
 const { 
   calculateTotalPrice, 
   validateTicketQuantity, 

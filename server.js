@@ -4,6 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const userRoutes = require('./Routes/userRoutes');
 const eventRoutes = require('./Routes/events.js');
+const bookingRoutes = require('./Routes/bookingRoutes');
 
 const app = express();
 

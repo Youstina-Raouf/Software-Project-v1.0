@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const {
   registerUser,
   loginUser,
@@ -14,7 +15,10 @@ const {
   getUserBookings,
   getUserEvents,
   getUserAnalytics,
+  forgotPassword,
+  resetPassword
 } = require('../Controllers/userController');
+
 const { protect, admin, organizer, user } = require('../middleware/authMiddleware');
 
 // ======================
@@ -41,6 +45,20 @@ router.post('/login', loginUser);
  * @access  Public
  */
 router.put('/forgetPassword', forgetPassword);
+
+/**
+ * @route   POST /api/v1/forgot-password
+ * @desc    Request OTP to email
+ * @access  Public
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @route   POST /api/v1/reset-password
+ * @desc    Reset password with OTP
+ * @access  Public
+ */
+router.post('/reset-password', resetPassword);
 
 // ======================
 // Authenticated User Routes
@@ -121,8 +139,3 @@ router.put('/:id', protect, admin, updateUserRole);
 router.delete('/:id', protect, admin, deleteUser);
 
 module.exports = router;
-//bonus
-const { forgotPassword, resetPassword } = require("../Controllers/userController");
-
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);

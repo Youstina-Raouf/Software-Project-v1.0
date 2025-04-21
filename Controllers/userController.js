@@ -389,12 +389,11 @@ module.exports = {
     getUserAnalytics
 };
 //bonus
-const User = require("../Models/Users");
-const { sendOTPEmail } = require("../utils/emailUtils");
 const crypto = require("crypto");
+const { sendOTPEmail } = require("../utils/bookingUtils");
 
 // Generate and send OTP
-exports.forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
@@ -403,7 +402,7 @@ exports.forgotPassword = async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   user.otp = otp;
-  user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 min expiry
+  user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
   await user.save();
 
   await sendOTPEmail(email, otp);
@@ -412,7 +411,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // Verify OTP and reset password
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
 
   const user = await User.findOne({ email });
@@ -421,10 +420,30 @@ exports.resetPassword = async (req, res) => {
   if (user.otp !== otp || Date.now() > user.otpExpiry)
     return res.status(400).json({ message: "Invalid or expired OTP" });
 
-  user.password = newPassword; // assume password hashing middleware in schema
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPassword, salt);
   user.otp = undefined;
   user.otpExpiry = undefined;
   await user.save();
 
   res.status(200).json({ message: "Password reset successful" });
+};
+
+// 👇 Export the two OTP functions
+module.exports = {
+  registerUser,
+  loginUser,
+  forgetPassword,
+  getAllUsers,
+  getUserProfile,
+  updateUserProfile,
+  deleteUserAccount,
+  getUserById,
+  updateUserRole,
+  deleteUser,
+  getUserBookings,
+  getUserEvents,
+  getUserAnalytics,
+  forgotPassword,
+  resetPassword
 };
