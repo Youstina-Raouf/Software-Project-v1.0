@@ -121,3 +121,8 @@ router.put('/:id', protect, admin, updateUserRole);
 router.delete('/:id', protect, admin, deleteUser);
 
 module.exports = router;
+//bonus
+const { forgotPassword, resetPassword } = require("../Controllers/userController");
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);

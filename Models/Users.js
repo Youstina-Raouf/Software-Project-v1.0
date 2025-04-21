@@ -47,7 +47,14 @@ const userSchema = new mongoose.Schema({
     lastLogin: { 
         type: Date,
         default: Date.now 
-    }
+    },
+    otp: {
+        type: String,
+      },
+      otpExpiry: {
+        type: Date,
+      },
+      
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },
