@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
         trim: true 
     },
     role: { 
-        type: String, 
+        type: String,   
         enum: ['Standard', 'Organizer', 'Admin'], 
         default: 'Standard',
         required: true 
@@ -47,7 +47,14 @@ const userSchema = new mongoose.Schema({
     lastLogin: { 
         type: Date,
         default: Date.now 
-    }
+    },
+    otp: {
+        type: String,
+      },
+      otpExpiry: {
+        type: Date,
+      },
+      
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },

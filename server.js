@@ -3,11 +3,14 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const userRoutes = require('./Routes/userRoutes');
-const eventRoutes = require('./Routes/events.js');
+const eventRoutes = require('./Routes/eventsRoutes');
+const bookingRoutes = require('./Routes/bookingRoutes');
 
 const app = express();
 
-// ✅ Middleware to parse JSON
+app.use('/api/v1', userRoutes);
+
+// Middleware
 app.use(express.json());
 
 // ✅ Logger middleware (optional but helpful)
@@ -16,9 +19,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Routes
-app.use('/api/v1', userRoutes);
+// Routes
+app.use('/api/users', userRoutes);
 app.use('/api', eventRoutes);
+app.use('/api', bookingRoutes);
 
 // ❌ Removed duplicate userRoutes: `/api/users`
 
@@ -45,17 +49,20 @@ app.listen(PORT, () => {
     console.log(`\n Server running on port ${PORT}`);
     console.log('\n Available Routes:');
     console.log('   Users:');
-    console.log('   - POST /api/v1/register        - Register new user');
-    console.log('   - POST /api/v1/login           - Login user');
-    console.log('   - GET  /api/v1/users/profile   - Get user profile');
-    console.log('   - PUT  /api/v1/users/profile   - Update profile');
-    console.log('   - DEL  /api/v1/users/profile   - Delete account');
+    console.log('   - POST /api/users/register    - Register new user');
+    console.log('   - POST /api/users/login       - Login user');
+    console.log('   - GET  /api/users/profile     - Get user profile');
+    console.log('   - PUT  /api/users/profile     - Update profile');
+    console.log('   - DEL  /api/users/profile     - Delete account');
     console.log('\n   Events:');
-    console.log('   - GET  /api/v1/events          - Get all events');
-    console.log('   - GET  /api/v1/events/:id      - Get event by ID');
-    console.log('   - POST /api/v1/events          - Create event (Organizer)');
-    console.log('   - PUT  /api/v1/events/:id      - Update event (Organizer)');
-    console.log('   - DEL  /api/v1/events/:id      - Delete event (Organizer)');
+    console.log('   - GET  /api/v1/events         - Get all events');
+    console.log('   - GET  /api/v1/events/:id     - Get event by ID');
+    console.log('   - POST /api/v1/events         - Create event (Organizer)');
+    console.log('   - PUT  /api/v1/events/:id     - Update event (Organizer)');
+    console.log('   - DEL  /api/v1/events/:id     - Delete event (Organizer)');
     console.log('   - PUT  /api/v1/events/:id/status - Update event status (Admin)');
-    console.log('   - GET  /api/v1/users/events/analytics - Get event analytics (Organizer)');
+    console.log('\n   Bookings:');
+    console.log('   - POST /api/v1/bookings       - Book tickets (User)');
+    console.log('   - GET  /api/v1/bookings/:id   - Get booking details (User)');
+    console.log('   - DEL  /api/v1/bookings/:id   - Cancel booking (User)');
 });

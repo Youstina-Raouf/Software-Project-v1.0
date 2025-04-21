@@ -3,13 +3,19 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/Users');
 const Booking = require('../Models/Bookings');
 const Event = require('../Models/Events');
+const { sendOTPEmail } = require("../utils/bookingUtils");
+
+// Generate JWT token
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+};
 
 // @desc    Register new user
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { username, email, password, firstName, lastName } = req.body;
+        const { username, email, password, firstName, lastName, role } = req.body;
 
         // Validation
         if (!username || !email || !password) {
@@ -32,18 +38,14 @@ const registerUser = async (req, res) => {
             });
         }
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create user
+        // Create user (password will be hashed by the pre-save hook)
         const user = await User.create({
             username,
             email: email.toLowerCase(),
-            password: hashedPassword,
+            password,
             firstName,
             lastName,
-            role: 'Standard'  // Default role
+            role: role || 'Standard'  // Default role if not provided
         });
 
         if (user) {
@@ -113,9 +115,9 @@ const loginUser = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 fullName: user.fullName,
-                role: user.role,
+                role: user.role,  // Include the role in the response
                 profilePicture: user.profilePicture,
-                token: generateToken(user._id)
+                token: generateToken(user._id)  // Assuming generateToken is implemented elsewhere
             }
         });
     } catch (error) {
@@ -148,6 +150,43 @@ const forgetPassword = async (req, res) => {
         await user.save();
 
         res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(400).json({
+            message: 'Password reset failed',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Reset password with OTP
+// @route   POST /api/users/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ message: 'Please provide email, OTP, and new password' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify OTP (you should implement proper OTP verification logic here)
+        // For now, we'll just check if the OTP matches a stored value
+        if (user.resetPasswordOTP !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.resetPasswordOTP = null; // Clear the OTP after successful reset
+        await user.save();
+
+        res.json({ message: 'Password reset successful' });
     } catch (error) {
         res.status(400).json({
             message: 'Password reset failed',
@@ -313,7 +352,7 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        await user.remove();
+        await User.findByIdAndDelete(req.params.id);
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting user', error: error.message });
@@ -326,7 +365,9 @@ const deleteUser = async (req, res) => {
 const getUserBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ user: req.user._id })
-            .populate('event', 'title date location');
+            .populate('event', 'title date location price')
+            .sort({ createdAt: -1 });
+
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving bookings', error: error.message });
@@ -335,29 +376,53 @@ const getUserBookings = async (req, res) => {
 
 // @desc    Get user events
 // @route   GET /api/users/events
-// @access  Organizer
+// @access  Event Organizer
 const getUserEvents = async (req, res) => {
     try {
-        const events = await Event.find({ organizer: req.user._id });
+        const events = await Event.find({ organizer: req.user._id })
+            .sort({ date: -1 }); // Sort by date in descending order
+
         res.json(events);
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving events', error: error.message });
     }
 };
 
-// @desc    Get user events analytics
+// @desc    Get user analytics
 // @route   GET /api/users/events/analytics
-// @access  Organizer
+// @access  Event Organizer
 const getUserAnalytics = async (req, res) => {
     try {
+        // Get all events organized by the user
         const events = await Event.find({ organizer: req.user._id });
-        
-        const analytics = events.map(event => ({
-            eventId: event._id,
+
+        // Calculate analytics
+        const analytics = {
+            totalEvents: events.length,
+            activeEvents: events.filter(event => event.status === 'active').length,
+            pendingEvents: events.filter(event => event.status === 'pending').length,
+            totalTickets: events.reduce((acc, event) => acc + event.totalTickets, 0),
+            totalBookedTickets: events.reduce((acc, event) => acc + (event.totalTickets - event.remainingTickets), 0),
+            revenue: events.reduce((acc, event) => {
+                const bookedTickets = event.totalTickets - event.remainingTickets;
+                return acc + (bookedTickets * event.price);
+            }, 0)
+        };
+
+        // Calculate booking percentage
+        analytics.bookingPercentage = analytics.totalTickets > 0
+            ? ((analytics.totalBookedTickets / analytics.totalTickets) * 100).toFixed(2) + '%'
+            : '0%';
+
+        // Get event-wise analytics
+        analytics.events = events.map(event => ({
+            id: event._id,
             title: event.title,
+            status: event.status,
             totalTickets: event.totalTickets,
             bookedTickets: event.totalTickets - event.remainingTickets,
-            percentageBooked: ((event.totalTickets - event.remainingTickets) / event.totalTickets * 100).toFixed(2) + '%'
+            revenue: (event.totalTickets - event.remainingTickets) * event.price,
+            bookingPercentage: ((event.totalTickets - event.remainingTickets) / event.totalTickets * 100).toFixed(2) + '%'
         }));
 
         res.json(analytics);
@@ -366,22 +431,16 @@ const getUserAnalytics = async (req, res) => {
     }
 };
 
-// Helper function to generate JWT token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
-};
-
 module.exports = {
     registerUser,
     loginUser,
     forgetPassword,
+    resetPassword,
     getAllUsers,
+    getUserById,
     getUserProfile,
     updateUserProfile,
     deleteUserAccount,
-    getUserById,
     updateUserRole,
     deleteUser,
     getUserBookings,
