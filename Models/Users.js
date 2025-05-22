@@ -68,16 +68,41 @@ userSchema.virtual('fullName').get(function() {
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        next();
+    // Always hash the password for new users
+    if (this.isNew || this.isModified('password')) {
+        console.log('Hashing password for new/modified user...');
+        try {
+            // Hash the password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(this.password, salt);
+            console.log('Password hashed successfully');
+            
+            // Set the hashed password
+            this.password = hashedPassword;
+        } catch (error) {
+            console.error('Error hashing password:', error);
+            return next(error);
+        }
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
 // Method to compare password
 userSchema.methods.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+    try {
+        // Direct comparison for debugging
+        console.log('Password comparison:');
+        console.log('Entered password:', enteredPassword);
+        console.log('Stored hashed password:', this.password);
+        
+        // Use bcrypt compare
+        const isMatch = await bcrypt.compare(enteredPassword, this.password);
+        console.log('Match result:', isMatch);
+        return isMatch;
+    } catch (error) {
+        console.error('Password comparison error:', error);
+        return false;
+    }
 };
 
 module.exports = mongoose.model('User', userSchema);

@@ -32,7 +32,7 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/event_booking_db', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/event_booking_db', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
