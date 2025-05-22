@@ -1,0 +1,19 @@
+/* src/EventList.css */
+
+.event-list-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 1rem;
+    background: #142b5f;
+    border-radius: 12px;
+    color: #e0e0e0;
+    box-shadow: 0 8px 20px rgba(10, 31, 68, 0.8);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .event-list-container h2 {
+    margin-bottom: 1rem;
+    color: #ff4081;
+    font-weight: 700;
+  }
+  
