@@ -8,8 +8,9 @@ export default function Navbar() {
   return (
     <nav style={{ background: '#142b5f', padding: '10px 20px', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
       <div>
-        <Link to="/" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold' }}>
-          Golden Ticket
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/png_.jpeg" alt="Golden Ticket Logo" style={{ height: '40px', marginRight: '10px' }} />
+          <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>Golden Ticket</span>
         </Link>
       </div>
       <div>
