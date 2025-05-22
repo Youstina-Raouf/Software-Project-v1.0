@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // import Link
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import './Login.css';
 
@@ -16,7 +16,7 @@ export default function Login() {
     setError('');
     try {
       await login(email, password);
-      navigate('/'); // Redirect after login
+      navigate('/');
     } catch (err) {
       setError('Invalid email or password');
     }
@@ -42,7 +42,13 @@ export default function Login() {
           required
         />
         <button type="submit">Log In</button>
+
+        {/* Forgot password link */}
+        <div className="forgot-password-link">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </div>
       </form>
+
       <p className="signup-text">
         Don't have an account? <Link to="/register">Sign up</Link>
       </p>

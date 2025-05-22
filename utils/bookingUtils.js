@@ -19,9 +19,27 @@ function calculateTotalPrice(ticketsBooked, eventPrice) {
     validateTicketQuantity,
     updateAvailableTickets,
     revertAvailableTickets
-<<<<<<< HEAD
+
   };
-=======
+
+//bonus
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+exports.sendOTPEmail = (to, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject: "Your Password Reset OTP",
+    text: `Your OTP for password reset is: ${otp}`,
   };
-  
->>>>>>> roba
+
+  return transporter.sendMail(mailOptions);
+};

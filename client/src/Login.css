@@ -1,27 +1,27 @@
 /* Login.css */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #0a1f44; /* dark navy background */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  background: #0a1f44;
   margin: 0;
   color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .login-container {
-  background: #142b5f; /* slightly lighter navy */
-  padding: 40px 50px;
+  background: #142b5f;
+  padding: 40px 50px 60px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(10, 31, 68, 0.8);
   width: 360px;
   text-align: center;
+  margin: auto;
 }
 
 .login-container h2 {
   margin-bottom: 20px;
-  color: #ff4081; /* neon pink accent */
+  color: #ff4081;
   font-weight: 700;
 }
 
@@ -41,6 +41,27 @@ body {
 
 .login-container input[type="email"]:focus,
 .login-container input[type="password"]:focus {
+  border-color: #ff4081;
+  outline: none;
+}
+
+/* 👇 New styles for Full Name and Role dropdown */
+.login-container input[type="text"],
+.login-container select {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid #38558c;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  background-color: #0a1f44;
+  color: #e0e0e0;
+  transition: border-color 0.3s ease;
+}
+
+.login-container input[type="text"]:focus,
+.login-container select:focus {
   border-color: #ff4081;
   outline: none;
 }
@@ -69,6 +90,21 @@ body {
   margin-bottom: 15px;
 }
 
+.forgot-password-link {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.forgot-password-link a {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+  color: #ff4081;
+  text-decoration: underline;
+}
+
 .signup-text {
   margin-top: 20px;
   font-size: 14px;
@@ -84,4 +120,35 @@ body {
 
 .signup-text a:hover {
   text-decoration: underline;
+}
+
+.password-field {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.password-field input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 40px;
+  border: 1px solid #38558c;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #0a1f44;
+  color: #e0e0e0;
+  box-sizing: border-box;
+}
+
+.toggle-eye {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }

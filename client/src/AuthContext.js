@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -25,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async (email, password) => {
-    const res = await axios.post('/api/auth/login', { email, password }, { withCredentials: true });
+    const res = await axios.post('/api/v1/login', { email, password }, { withCredentials: true });
     setUser(res.data.user);
     return res;
   };
