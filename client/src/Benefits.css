@@ -1,0 +1,30 @@
+/* src/BenefitsSection.css */
+.benefits-container {
+  text-align: center;
+  background: #1f1f2e;
+  color: #fff;
+  padding: 50px 20px;
+  margin-top: 40px;
+  border-radius: 12px;
+}
+
+.benefits-buttons {
+  margin-top: 20px;
+}
+
+.benefit-btn {
+  display: inline-block;
+  margin: 0 10px;
+  padding: 12px 28px;
+  color: white;
+  background-color: #ff3399;
+  border: none;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.benefit-btn:hover {
+  background-color: #cc007a;
+}
