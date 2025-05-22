@@ -1,20 +1,99 @@
 const express = require("express");
 const router = express.Router();
-const eventController = require("../Controllers/eventController");
 
-// Public routes
-router.get("/api/v1/events", eventController.getAllEvents);
-router.get("/api/v1/events/:id", eventController.getEventById);
+const {
+  createEvent,
+  getEvents,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  updateEventStatus,
+  getEventAnalytics
+} = require('../Controllers/eventController');
 
-// Organizer routes (will need auth middleware)
-router.post("/api/v1/events", eventController.createEvent);
-router.put("/api/v1/events/:id", eventController.updateEvent);
-router.delete("/api/v1/events/:id", eventController.deleteEvent);
+const { protect, organizer, admin } = require('../middleware/authMiddleware');
 
-// Admin routes (will need auth middleware)
-router.put("/api/v1/events/:id/status", eventController.updateEventStatus);
+// ======================
+// Public Routes
+// ======================
 
-// Analytics route (Organizer only)
-router.get("/api/v1/users/events/analytics", eventController.getEventAnalytics);
+/**
+ * @route   GET /api/v1/events
+ * @desc    Get list of all Approved events
+ * @access  Public
+ */
+router.get('/v1/events', getEvents);
 
-module.exports = router;
+/**
+ * @route   GET /api/v1/events/all
+ * @desc    Get list of all events (approved,pending,declined)
+ * @access  Admin
+ */
+router.get('/v1/events/all', protect, admin, getAllEvents);
+
+/**
+ * @route   DELETE /api/v1/events/:id
+ * @desc    Delete an event
+ * @access  Event Organizer or Admin
+ */
+router.delete('/v1/events/:id', protect, organizer, deleteEvent);
+
+/**
+ * @route   GET /api/v1/events/:id
+ * @desc    Get details of a single event
+ * @access  Public
+ */
+
+router.get('/v1/events/:id', getEventById);
+
+// ======================
+// Organizer Routes
+// ======================
+
+/**
+ * @route   POST /api/v1/events
+ * @desc    Create a new event
+ * @access  Event Organizer
+ */
+router.post('/v1/events', protect, organizer, createEvent);
+
+/**
+ * @route   PUT /api/v1/events/:id
+ * @desc    Update an event
+ * @access  Event Organizer or Admin
+ */
+router.put('/v1/events/:id', protect, (req, res, next) => {
+  if (req.user.role === 'Organizer' || req.user.role === 'Admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as organizer or admin' });
+  }
+}, updateEvent);
+
+// /**
+//  * @route   DELETE /api/v1/events/:id
+//  * @desc    Delete an event
+//  * @access  Event Organizer or Admin
+//  */
+// router.delete('/v1/events/:id', protect, organizer, deleteEvent);
+
+/**
+ * @route   GET /api/users/events/analytics
+ * @desc    Get analytics for organizer's events
+ * @access  Organizer
+ */
+router.get('/v1/users/events/analytics', protect, organizer, getEventAnalytics);
+
+// ======================
+// Admin Route
+// ======================
+
+/**
+ * @route   PUT /api/v1/events/:id/status
+ * @desc    Update event status
+ * @access  Admin
+ */
+router.put('/v1/events/:id/status', protect, admin, updateEventStatus);
+
+module.exports = router;
