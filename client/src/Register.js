@@ -44,14 +44,14 @@ export default function Register() {
     }
 
     try {
-      await axios.post('/api/users/register', {
-        username,
-        firstName,
-        lastName,
-        email,
-        password,
-        role
-      }, { withCredentials: true });
+  await axios.post('/api/v1/register', {
+    username,
+    firstName,
+    lastName,
+    email,
+    password,
+    role
+  }, { withCredentials: true });
 
       navigate('/login');
     } catch (err) {
