@@ -121,3 +121,34 @@ body {
 .signup-text a:hover {
   text-decoration: underline;
 }
+
+.password-field {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.password-field input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 40px;
+  border: 1px solid #38558c;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #0a1f44;
+  color: #e0e0e0;
+  box-sizing: border-box;
+}
+
+.toggle-eye {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}

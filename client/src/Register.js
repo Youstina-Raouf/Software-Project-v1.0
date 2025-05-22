@@ -7,13 +7,17 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'User',
+    role: 'Standard'
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
@@ -27,9 +31,9 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
-    const { name, email, password, confirmPassword, role } = formData;
+    const { username, firstName, lastName, email, password, confirmPassword, role } = formData;
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!username || !firstName || !lastName || !email || !password || !confirmPassword) {
       setError('All fields are required');
       return;
     }
@@ -40,14 +44,18 @@ export default function Register() {
     }
 
     try {
-      await axios.post(
-        '/api/auth/register',
-        { name, email, password, role },
-        { withCredentials: true }
-      );
+      await axios.post('/api/users/register', {
+        username,
+        firstName,
+        lastName,
+        email,
+        password,
+        role
+      }, { withCredentials: true });
 
       navigate('/login');
     } catch (err) {
+      console.error(err.response?.data);
       setError(err.response?.data?.message || 'Registration failed');
     }
   };
@@ -60,9 +68,27 @@ export default function Register() {
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          type="text"
+          name="firstName"
+          placeholder="First Name"
+          value={formData.firstName}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          type="text"
+          name="lastName"
+          placeholder="Last Name"
+          value={formData.lastName}
           onChange={handleChange}
           required
         />
@@ -76,31 +102,36 @@ export default function Register() {
           required
         />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+        <div className="password-field">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <span onClick={() => setShowPassword(prev => !prev)} className="toggle-eye">
+            {showPassword ? '🙈' : '👁️'}
+          </span>
+        </div>
 
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          required
-        />
+        <div className="password-field">
+          <input
+            type={showConfirm ? 'text' : 'password'}
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+          <span onClick={() => setShowConfirm(prev => !prev)} className="toggle-eye">
+            {showConfirm ? '🙈' : '👁️'}
+          </span>
+        </div>
 
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          required
-        >
-          <option value="User">Standard User</option>
+        <select name="role" value={formData.role} onChange={handleChange}>
+          <option value="Standard">Standard User</option>
           <option value="Organizer">Event Organizer</option>
         </select>
 
