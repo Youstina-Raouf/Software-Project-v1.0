@@ -13,7 +13,7 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'Standard'
+    role: 'user'
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -131,8 +131,9 @@ export default function Register() {
         </div>
 
         <select name="role" value={formData.role} onChange={handleChange}>
-          <option value="Standard">Standard User</option>
-          <option value="Organizer">Event Organizer</option>
+          <option value="user">Standard User</option>
+          <option value="organizer">Event Organizer</option>
+          <option value="admin">Administrator</option>
         </select>
 
         <button type="submit">Sign Up</button>

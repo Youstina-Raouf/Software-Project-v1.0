@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
-const { protect, restrictTo } = require('../middleware/auth');
+const { protect, admin, organizer, user } = require('../middleware/authMiddleware');
 const {
   registerUser,
   loginUser,
@@ -21,7 +21,7 @@ const validateRegister = [
 
 const validateLogin = [
   body('email').isEmail().withMessage('Please enter a valid email'),
-  body('password').not().isEmpty().withMessage('Password is required'),
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 // Error handling for validation
@@ -42,5 +42,4 @@ router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.delete('/profile', protect, deleteUserAccount);
 
-// Export the router
-module.exports = router;
+module.exports = router;

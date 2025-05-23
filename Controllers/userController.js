@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
   try {
     const { username, email, password, firstName, lastName, role } = req.body;
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !firstName || !lastName) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
@@ -37,14 +37,18 @@ const registerUser = async (req, res) => {
       });
     }
 
+    // Validate role
+    const validRoles = ['user', 'organizer', 'admin'];
+    const userRole = validRoles.includes(role) ? role : 'user';
+
     // Create user (password hashed by pre-save hook)
     const user = await User.create({
-      username,
+      username: username.toLowerCase(),
       email: email.toLowerCase(),
       password,
       firstName,
       lastName,
-      role: role || 'Standard'
+      role: userRole
     });
 
     if (user) {
@@ -65,6 +69,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
+    console.error('Registration error:', error);
     return res.status(500).json({ message: 'Server error during registration', error: error.message });
   }
 };
@@ -83,17 +88,17 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ message: 'Account is deactivated' });
+      return res.status(403).json({ message: 'Account is deactivated. Please contact support.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     user.lastLogin = new Date();
@@ -114,6 +119,7 @@ const loginUser = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     return res.status(500).json({ message: 'Server error during login', error: error.message });
   }
 };
