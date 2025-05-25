@@ -189,9 +189,13 @@ const resetPassword = async (req, res) => {
 // @access  Admin
 const getAllUsers = async (req, res) => {
   try {
+    console.log('getAllUsers called');
+    console.log('User making request:', req.user);
     const users = await User.find().select('-password');
+    console.log('Found users:', users.length);
     return res.json(users);
   } catch (error) {
+    console.error('Error in getAllUsers:', error);
     return res.status(500).json({ message: 'Error retrieving users', error: error.message });
   }
 };
@@ -318,18 +322,19 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// @desc    Get user bookings
-// @route   GET /api/users/bookings
+// @desc    Get user's bookings
+// @route   GET /api/v1/users/bookings
 // @access  Private
 const getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
-      .populate('event', 'title date location price')
+      .populate('event', 'title date location')
       .sort({ createdAt: -1 });
-
+    
     return res.json(bookings);
   } catch (error) {
-    return res.status(500).json({ message: 'Error retrieving bookings', error: error.message });
+    console.error('Error fetching user bookings:', error);
+    return res.status(500).json({ message: 'Error fetching bookings', error: error.message });
   }
 };
 
@@ -386,6 +391,17 @@ const getUserAnalytics = async (req, res) => {
   }
 };
 
+// @desc    Logout user / clear cookie
+// @route   POST /api/v1/logout
+// @access  Public
+const logoutUser = (req, res) => {
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -400,5 +416,6 @@ module.exports = {
   deleteUser,
   getUserBookings,
   getUserEvents,
-  getUserAnalytics
+  getUserAnalytics,
+  logoutUser,
 };

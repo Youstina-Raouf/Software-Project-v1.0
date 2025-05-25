@@ -9,10 +9,12 @@ const {
   updateEvent,
   deleteEvent,
   updateEventStatus,
-  getEventAnalytics
+  getEventAnalytics,
+  getOrganizerEvents
 } = require('../Controllers/eventController');
 
-const { protect, organizer, admin } = require('../middleware/authMiddleware');
+const { protect, authorize, admin } = require('../middleware/authMiddleware');
+const Event = require('../Models/Events');
 
 // ======================
 // Public Routes
@@ -23,77 +25,87 @@ const { protect, organizer, admin } = require('../middleware/authMiddleware');
  * @desc    Get list of all Approved events
  * @access  Public
  */
-router.get('/v1/events', getEvents);
+router.get('/', getEvents);
+
+// ======================
+// Admin Routes
+// ======================
 
 /**
  * @route   GET /api/v1/events/all
  * @desc    Get list of all events (approved,pending,declined)
  * @access  Admin
  */
-router.get('/v1/events/all', protect, admin, getAllEvents);
-
-/**
- * @route   DELETE /api/v1/events/:id
- * @desc    Delete an event
- * @access  Event Organizer or Admin
- */
-router.delete('/v1/events/:id', protect, organizer, deleteEvent);
-
-/**
- * @route   GET /api/v1/events/:id
- * @desc    Get details of a single event
- * @access  Public
- */
-
-router.get('/v1/events/:id', getEventById);
+router.get('/all', protect, authorize('admin'), getAllEvents);
 
 // ======================
 // Organizer Routes
 // ======================
 
 /**
+ * @route   GET /api/v1/events/organizer
+ * @desc    Get events for the logged-in organizer
+ * @access  Organizer
+ */
+router.get('/organizer', protect, authorize('organizer'), getOrganizerEvents);
+
+/**
+ * @route   GET /api/v1/events/analytics
+ * @desc    Get analytics for organizer's events
+ * @access  Organizer
+ */
+router.get('/analytics', protect, authorize('organizer'), getEventAnalytics);
+
+/**
  * @route   POST /api/v1/events
  * @desc    Create a new event
  * @access  Event Organizer
  */
-router.post('/v1/events', protect, organizer, createEvent);
+router.post('/', protect, authorize('organizer'), createEvent);
+
+/**
+ * @route   POST /api/v1/events/create
+ * @desc    Create a new event (alternative endpoint)
+ * @access  Event Organizer
+ */
+router.post('/create', protect, authorize('organizer'), createEvent);
+
+// ======================
+// Event ID Routes
+// ======================
+
+/**
+ * @route   GET /api/v1/events/:id
+ * @desc    Get event by ID
+ * @access  Public
+ */
+router.get('/:id', getEventById);
 
 /**
  * @route   PUT /api/v1/events/:id
  * @desc    Update an event
  * @access  Event Organizer or Admin
  */
-router.put('/v1/events/:id', protect, (req, res, next) => {
-  if (req.user.role === 'Organizer' || req.user.role === 'Admin') {
+router.put('/:id', protect, (req, res, next) => {
+  if (req.user.role.toLowerCase() === 'organizer' || req.user.role.toLowerCase() === 'admin') {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as organizer or admin' });
   }
 }, updateEvent);
 
-// /**
-//  * @route   DELETE /api/v1/events/:id
-//  * @desc    Delete an event
-//  * @access  Event Organizer or Admin
-//  */
-// router.delete('/v1/events/:id', protect, organizer, deleteEvent);
-
 /**
- * @route   GET /api/users/events/analytics
- * @desc    Get analytics for organizer's events
- * @access  Organizer
+ * @route   DELETE /api/v1/events/:id
+ * @desc    Delete an event
+ * @access  Event Organizer or Admin
  */
-router.get('/v1/users/events/analytics', protect, organizer, getEventAnalytics);
-
-// ======================
-// Admin Route
-// ======================
+router.delete('/:id', protect, authorize('organizer'), deleteEvent);
 
 /**
  * @route   PUT /api/v1/events/:id/status
  * @desc    Update event status
  * @access  Admin
  */
-router.put('/v1/events/:id/status', protect, admin, updateEventStatus);
+router.put('/:id/status', protect, authorize('admin'), updateEventStatus);
 
-module.exports = router;
+module.exports = router;

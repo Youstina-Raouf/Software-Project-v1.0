@@ -9,6 +9,9 @@ const {
   getUserProfile,
   updateUserProfile,
   deleteUserAccount,
+  logoutUser,
+  forgetPassword,
+  resetPassword
 } = require('../Controllers/userController');
 
 // Validation for Register and Login
@@ -36,6 +39,9 @@ const handleValidationErrors = (req, res, next) => {
 // Public routes
 router.post('/register', validateRegister, handleValidationErrors, registerUser);
 router.post('/login', validateLogin, handleValidationErrors, loginUser);
+router.post('/logout', logoutUser);
+router.put('/forgetPassword', forgetPassword);
+router.post('/reset-password', resetPassword);
 
 // Protected routes (authentication required)
 router.get('/profile', protect, getUserProfile);

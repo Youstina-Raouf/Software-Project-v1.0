@@ -1,66 +1,78 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import api from './api';
-import './AdminPage.css'; // We can reuse the admin page styles for now
 
-const OrganizerDashboard = () => {
+export default function OrganizerDashboard() {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchOrganizerEvents();
+    fetchEvents();
   }, []);
 
-  const fetchOrganizerEvents = async () => {
+  const fetchEvents = async () => {
     try {
-      setLoading(true);
-      setError('');
-      const response = await api.get('/events/organizer');
+      const response = await api.get('/api/v1/events/organizer');
       setEvents(response.data);
+      setLoading(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch events');
-    } finally {
+      console.error('Error fetching events:', err);
+      setError('Failed to load events');
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  const handleDelete = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/v1/events/${eventId}`);
+      setEvents(events.filter(event => event._id !== eventId));
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      setError('Failed to delete event');
+    }
+  };
+
+  if (loading) return <div className="loading">Loading events...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="admin-page">
-      <h1>Organizer Dashboard</h1>
+    <div className="organizer-dashboard">
+      <h2>Manage Your Events</h2>
       
-      <section className="admin-section">
-        <h2>My Events</h2>
-        <div className="events-list">
-          {events.length === 0 ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#888', padding: '2rem' }}>
-              No events found.
-            </div>
-          ) : (
-            events.map(event => (
-              <div key={event._id} className="event-card">
-                <h3>{event.title}</h3>
-                <p>Status: {event.status}</p>
-                <p>Description: {event.description}</p>
-                <div className="event-actions">
-                  <button onClick={() => window.location.href = `/events/${event._id}/edit`}>
-                    Edit Event
-                  </button>
-                  <button onClick={() => window.location.href = `/events/${event._id}/bookings`}>
-                    View Bookings
-                  </button>
-                </div>
+      <div className="events-list">
+        {events.length === 0 ? (
+          <p>You haven't created any events yet.</p>
+        ) : (
+          events.map(event => (
+            <div key={event._id} className="event-card">
+              <h3>{event.title}</h3>
+              <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
+              <p><strong>Location:</strong> {event.location}</p>
+              <p><strong>Status:</strong> {event.status}</p>
+              <p><strong>Tickets:</strong> {event.remainingTickets} of {event.totalTickets} remaining</p>
+              
+              <div className="event-actions">
+                <Link to={`/my-events/${event._id}/edit`} className="edit-button">
+                  Edit
+                </Link>
+                <button 
+                  onClick={() => handleDelete(event._id)}
+                  className="delete-button"
+                >
+                  Delete
+                </button>
               </div>
-            ))
-          )}
-        </div>
-      </section>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
-};
-
-export default OrganizerDashboard;
+}

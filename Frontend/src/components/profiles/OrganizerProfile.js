@@ -17,9 +17,9 @@ const OrganizerProfile = () => {
         
         <div className="profile-actions">
           <h3>Event Management</h3>
-          <button onClick={() => window.location.href = '/events/create'}>Create New Event</button>
-          <button onClick={() => window.location.href = '/events/manage'}>Manage Events</button>
-          <button onClick={() => window.location.href = '/events/analytics'}>View Analytics</button>
+          <button onClick={() => window.location.href = '/my-events/new'}>Create New Event</button>
+          <button onClick={() => window.location.href = '/my-events'}>Manage Events</button>
+          <button onClick={() => window.location.href = '/my-events/analytics'}>View Analytics</button>
         </div>
 
         <div className="event-stats">

@@ -143,6 +143,7 @@ function Register() {
             >
               <option value="user">User</option>
               <option value="organizer">Event Organizer</option>
+              <option value="admin">Administrator</option>
             </select>
           </div>
           <button type="submit" className="register-button">Register</button>

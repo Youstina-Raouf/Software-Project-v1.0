@@ -18,6 +18,8 @@ const Navbar = () => {
         <Link to="/">Event Ticketing</Link>
       </div>
       <div className="navbar-menu">
+        <Link to="/events" className="navbar-item">Events</Link>
+        
         {user ? (
           <>
             <Link to="/profile" className="navbar-item">Profile</Link>
@@ -25,7 +27,7 @@ const Navbar = () => {
               <Link to="/admin" className="navbar-item">Admin Dashboard</Link>
             )}
             {user.role === 'organizer' && (
-              <Link to="/organizer-dashboard" className="navbar-item">Organizer Dashboard</Link>
+              <Link to="/my-events" className="navbar-item">My Events</Link>
             )}
             <button onClick={handleLogout} className="navbar-item logout-button">Logout</button>
           </>

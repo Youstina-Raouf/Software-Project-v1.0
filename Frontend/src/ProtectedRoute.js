@@ -1,40 +1,30 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from './AuthContext';
+import { useAuth } from './AuthContext';
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading } = useAuth();
 
-  console.log('=== Protected Route Check ===');
-  console.log('Current User:', user);
-  console.log('Allowed Roles:', allowedRoles);
-  console.log('Loading State:', loading);
+  console.log('ProtectedRoute check:', {
+    user,
+    loading,
+    allowedRoles,
+    hasAccess: user && (!allowedRoles.length || allowedRoles.includes(user.role))
+  });
 
-  // Show loading state while checking authentication
   if (loading) {
-    console.log('Still loading user data...');
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
-  // If no user is logged in, redirect to login
   if (!user) {
-    console.log('No user found - redirecting to login');
-    return <Navigate to="/login" replace />;
+    console.log('No user found, redirecting to login');
+    return <Navigate to="/login" />;
   }
 
-  // If roles are specified, check if user's role is allowed
-  if (allowedRoles.length > 0) {
-    const userRole = user.role.toLowerCase();
-    console.log('Checking role access. User role:', userRole);
-    console.log('Required roles:', allowedRoles);
-    
-    if (!allowedRoles.includes(userRole)) {
-      console.log('Access denied - user role not allowed');
-      return <Navigate to="/unauthorized" replace />;
-    }
+  if (allowedRoles.length && !allowedRoles.includes(user.role)) {
+    console.log('User role not allowed:', user.role);
+    return <Navigate to="/" />;
   }
 
-  // If all checks pass, render the protected content
-  console.log('Access granted - rendering protected content');
   return children;
 }

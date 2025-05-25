@@ -3,9 +3,18 @@ const Event = require('../Models/Events');
 // 📌 Get approved events (Public)
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: 'approved' });
+    console.log('Fetching approved events...');
+    const events = await Event.find({ status: 'approved' }).select('-__v');
+    console.log('Found events:', events.length);
+    console.log('Events:', events.map(e => ({ 
+      id: e._id, 
+      title: e.title, 
+      status: e.status,
+      image: e.image 
+    })));
     res.status(200).json(events);
   } catch (error) {
+    console.error('Error in getEvents:', error);
     res.status(500).json({ message: "Error retrieving events", error: error.message });
   }
 };
@@ -13,9 +22,29 @@ exports.getEvents = async (req, res) => {
 // 📌 Get all events (Admin only)
 exports.getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find();
+    console.log('Getting all events for admin:', {
+      userId: req.user._id,
+      userRole: req.user.role
+    });
+
+    // Add validation for admin role
+    if (!req.user || req.user.role.toLowerCase() !== 'admin') {
+      console.log('Admin role check failed:', {
+        hasUser: !!req.user,
+        userRole: req.user?.role,
+        expectedRole: 'admin'
+      });
+      return res.status(403).json({ message: "Only admins can access all events" });
+    }
+
+    const events = await Event.find({}).populate('organizer', 'username email');
+    console.log('Found events:', events.length);
+    console.log('Events:', events.map(e => ({ id: e._id, title: e.title, status: e.status })));
+
     res.status(200).json(events);
   } catch (error) {
+    console.error('Error in getAllEvents:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: "Error retrieving events", error: error.message });
   }
 };
@@ -34,10 +63,32 @@ exports.getEventById = async (req, res) => {
 
 // 📌 Create event (Organizer only)
 exports.createEvent = async (req, res) => {
-  const { title, description, date, location, totalTickets, price } = req.body;
+  const { title, description, date, location, totalTickets, price, image } = req.body;
 
   try {
-    if (!req.user || req.user.role !== 'Organizer') {
+    console.log('Creating event with data:', {
+      title,
+      description,
+      date,
+      location,
+      totalTickets,
+      price,
+      image,
+      hasImage: !!image
+    });
+
+    console.log('User from request:', {
+      id: req.user?._id,
+      role: req.user?.role,
+      email: req.user?.email
+    });
+
+    if (!req.user || req.user.role !== 'organizer') {
+      console.log('Role check failed:', {
+        hasUser: !!req.user,
+        userRole: req.user?.role,
+        expectedRole: 'organizer'
+      });
       return res.status(403).json({ message: "Only organizers can create events" });
     }
 
@@ -50,19 +101,35 @@ exports.createEvent = async (req, res) => {
       totalTickets,
       remainingTickets: totalTickets,
       price,
+      image,
       status: 'pending'
     });
 
+    console.log('Event object before save:', {
+      title: event.title,
+      image: event.image,
+      hasImage: !!event.image
+    });
+
     await event.save();
+    
+    console.log('Event saved successfully:', {
+      id: event._id,
+      title: event.title,
+      image: event.image,
+      hasImage: !!event.image
+    });
+
     res.status(201).json({ message: "Event created successfully", event });
   } catch (error) {
+    console.error('Error creating event:', error);
     res.status(500).json({ message: "Error creating event", error: error.message });
   }
 };
 
 // 📌 Update event (Organizer only)
 exports.updateEvent = async (req, res) => {
-  const { title, description, date, location, totalTickets, price } = req.body;
+  const { title, description, date, location, totalTickets, price, image } = req.body;
 
   try {
     const event = await Event.findById(req.params.id);
@@ -73,14 +140,18 @@ exports.updateEvent = async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
+    // Convert role to lowercase for comparison
+    const userRole = req.user.role.toLowerCase();
+
     // If user is admin, allow update
-    if (req.user.role === 'Admin') {
+    if (userRole === 'admin') {
       // Update fields if they are provided in the request
       if (title) event.title = title;
       if (description) event.description = description;
       if (date) event.date = date;
       if (location) event.location = location;
       if (price) event.price = price;
+      if (image) event.image = image;
 
       // Handle totalTickets update and adjust remainingTickets accordingly
       if (totalTickets) {
@@ -94,7 +165,7 @@ exports.updateEvent = async (req, res) => {
     }
 
     // If user is organizer, they can only update their own events
-    if (req.user.role === 'Organizer') {
+    if (userRole === 'organizer') {
       if (event.organizer.toString() !== req.user._id.toString()) {
         return res.status(403).json({ message: "You can only update your own events" });
       }
@@ -105,6 +176,7 @@ exports.updateEvent = async (req, res) => {
       if (date) event.date = date;
       if (location) event.location = location;
       if (price) event.price = price;
+      if (image) event.image = image;
 
       // Handle totalTickets update and adjust remainingTickets accordingly
       if (totalTickets) {
@@ -130,7 +202,7 @@ exports.deleteEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    if (!req.user || req.user.role !== 'Organizer' || event.organizer.toString() !== req.user._id.toString()) {
+    if (!req.user || req.user.role !== 'organizer' || event.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "You can only delete your own events" });
     }
 
@@ -146,17 +218,54 @@ exports.updateEventStatus = async (req, res) => {
   const { status } = req.body;
 
   try {
-    if (!req.user || req.user.role !== 'Admin') {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Convert role to lowercase for comparison
+    const userRole = req.user.role.toLowerCase();
+    
+    if (userRole !== 'admin') {
       return res.status(403).json({ message: "Only admins can update event status" });
     }
 
+    console.log('Finding event with ID:', req.params.id);
     const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: "Event not found" });
+    if (!event) {
+      console.log('Event not found');
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    console.log('Current event:', {
+      id: event._id,
+      title: event.title,
+      status: event.status
+    });
 
     event.status = status;
     await event.save();
-    res.status(200).json({ message: "Event status updated successfully", event });
+
+    // Fetch the complete updated event to ensure we have all fields
+    const updatedEvent = await Event.findById(event._id)
+      .populate('organizer', 'username email')
+      .lean(); // Use lean() to get a plain JavaScript object
+
+    if (!updatedEvent) {
+      console.error('Failed to fetch updated event');
+      throw new Error('Failed to fetch updated event');
+    }
+
+    console.log('Sending updated event:', {
+      id: updatedEvent._id,
+      title: updatedEvent.title,
+      status: updatedEvent.status,
+      organizer: updatedEvent.organizer
+    });
+
+    // Return the complete updated event
+    res.status(200).json(updatedEvent);
   } catch (error) {
+    console.error('Error updating event status:', error);
     res.status(500).json({ message: "Error updating event status", error: error.message });
   }
 };
@@ -172,7 +281,7 @@ const calculateTicketBookingPercentage = (event) => {
 // 📌 Event analytics (Organizer only)
 exports.getEventAnalytics = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== 'Organizer') {
+    if (!req.user || req.user.role !== 'organizer') {
       return res.status(403).json({ message: "Only organizers can view analytics" });
     }
 
@@ -201,6 +310,56 @@ exports.getEventAnalytics = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: "Error calculating analytics", error: error.message });
-  }
+    res.status(500).json({ message: "Error calculating analytics", error: error.message });
+  }
+};
+
+// 📌 Get organizer's events
+exports.getOrganizerEvents = async (req, res) => {
+  try {
+    // Validate user and role
+    if (!req.user) {
+      console.error('No user found in request');
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    console.log('Getting events for organizer:', {
+      userId: req.user._id,
+      userRole: req.user.role,
+      email: req.user.email
+    });
+
+    if (req.user.role !== 'organizer') {
+      console.log('Role check failed:', {
+        hasUser: !!req.user,
+        userRole: req.user?.role,
+        expectedRole: 'organizer'
+      });
+      return res.status(403).json({ message: "Only organizers can access their events" });
+    }
+
+    // Find events where the organizer field matches the user's ID
+    const events = await Event.find({ organizer: req.user._id })
+      .sort({ date: -1 }) // Sort by date, newest first
+      .lean(); // Convert to plain JavaScript objects for better performance
+    
+    console.log('Found events:', events.length);
+    if (events.length > 0) {
+      console.log('First event:', {
+        id: events[0]._id,
+        title: events[0].title,
+        status: events[0].status,
+        organizer: events[0].organizer
+      });
+    }
+
+    return res.status(200).json(events);
+  } catch (error) {
+    console.error('Error in getOrganizerEvents:', error);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      message: "Error retrieving events", 
+      error: error.message
+    });
+  }
 };

@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('Initial token check:', token ? 'Present' : 'Missing');
+    
     if (token) {
       fetchUserProfile();
     } else {
@@ -26,26 +28,37 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await api.get('/api/v1/users/profile');
+      console.log('Fetching user profile...');
+      const response = await api.get('/api/v1/auth/profile');
+      console.log('Profile response:', response.data);
       setUser(response.data);
-      setLoading(false);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Profile fetch error:', error.response?.data || error.message);
       localStorage.removeItem('token');
       setUser(null);
+    } finally {
       setLoading(false);
     }
   };
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/api/v1/login', { email, password });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
-      return { success: true };
+      console.log('Attempting login...');
+      const response = await api.post('/api/v1/auth/login', { email, password });
+      console.log('Login response:', response.data);
+      
+      const { user } = response.data;
+      if (!user || !user.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      localStorage.setItem('token', user.token);
+      // Remove token from user object before storing in state
+      const { token, ...userWithoutToken } = user;
+      setUser(userWithoutToken);
+      return { success: true, user: userWithoutToken };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || 'Login failed'
@@ -55,13 +68,22 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/api/v1/register', userData);
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
-      return { success: true };
+      console.log('Attempting registration...');
+      const response = await api.post('/api/v1/auth/register', userData);
+      console.log('Registration response:', response.data);
+      
+      const { user } = response.data;
+      if (!user || !user.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      localStorage.setItem('token', user.token);
+      // Remove token from user object before storing in state
+      const { token, ...userWithoutToken } = user;
+      setUser(userWithoutToken);
+      return { success: true, user: userWithoutToken };
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || 'Registration failed'
@@ -69,15 +91,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    try {
-      await api.post('/api/v1/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      setUser(null);
-    }
+  const logout = () => {
+    console.log('Logging out...');
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  const updateUser = (updatedUser) => {
+    console.log('Updating user:', updatedUser);
+    setUser(updatedUser);
   };
 
   const value = {
@@ -86,12 +108,12 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    fetchUserProfile
+    updateUser
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

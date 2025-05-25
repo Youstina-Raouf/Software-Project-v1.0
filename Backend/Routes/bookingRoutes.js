@@ -8,7 +8,7 @@ const {
   getUserBookings
 } = require('../Controllers/bookingController');
 
-const { protect, user } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 // ======================
 // Booking Routes
@@ -19,27 +19,27 @@ const { protect, user } = require('../middleware/authMiddleware');
  * @desc    Book tickets for an event
  * @access  Protected (Standard User)
  */
-router.post('/v1/bookings', protect, user, bookTicket);
+router.post('/', protect, authorize('user'), bookTicket);
 
 /**
  * @route   GET /api/v1/bookings/:id
  * @desc    Get booking details by ID
  * @access  Protected (User)
  */
-router.get('/v1/bookings/:id', protect, user, getBookingById);
+router.get('/:id', protect, authorize('user'), getBookingById);
 
 /**
  * @route   DELETE /api/v1/bookings/:id
  * @desc    Cancel a booking
  * @access  Protected (User)
  */
-router.delete('/v1/bookings/:id', protect, user, cancelBooking);
+router.delete('/:id', protect, authorize('user'), cancelBooking);
 
 /**
  * @route   GET /api/v1/bookings/user/bookings
  * @desc    Get current user's bookings
  * @access  Protected (User)
  */
-router.get('/v1/users/bookings', protect, user, getUserBookings);
+router.get('/user/bookings', protect, authorize('user'), getUserBookings);
 
-module.exports = router;
+module.exports = router;
