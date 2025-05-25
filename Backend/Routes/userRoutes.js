@@ -61,21 +61,21 @@ router.post('/v1/reset-password', resetPassword);
  * @desc    Get current user's profile
  * @access  Private
  */
-router.get('/v1/users/profile', protect, getUserProfile);
+router.get('/profile', protect, getUserProfile);
 
 /**
  * @route   PUT /api/v1/users/profile
  * @desc    Update current user's profile
  * @access  Private
  */
-router.put('/v1/users/profile', protect, updateUserProfile);
+router.put('/profile', protect, updateUserProfile);
 
 /**
  * @route   DELETE /api/v1/users/profile
  * @desc    Soft delete current user's account
  * @access  Private
  */
-router.delete('/v1/users/profile', protect, deleteUserAccount);
+router.delete('/profile', protect, deleteUserAccount);
 
 /**
  * @route   GET /api/v1/users/bookings
@@ -104,7 +104,7 @@ router.get('/v1/users/events/analytics', protect, organizer, getUserAnalytics);
 
 /**
  * @route   GET /api/v1/users
- * @desc    Get all users
+ * @desc    Get all users (Admin only)
  * @access  Admin
  */
 router.get('/v1/users', protect, admin, getAllUsers);
@@ -130,4 +130,4 @@ router.put('/v1/users/:id', protect, admin, updateUserRole);
  */
 router.delete('/v1/users/:id', protect, admin, deleteUser);
 
-module.exports = router;
+module.exports = router;

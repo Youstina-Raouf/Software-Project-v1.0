@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { AuthContext } from './AuthContext';
 import './Login.css'; // Reuse login styling
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -38,25 +39,37 @@ export default function Register() {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
     try {
-  await axios.post('/api/v1/register', {
-    username,
-    firstName,
-    lastName,
-    email,
-    password,
-    role
-  }, { withCredentials: true });
-
+      await register({
+        username,
+        firstName,
+        lastName,
+        email,
+        password,
+        role
+      });
       navigate('/login');
     } catch (err) {
-      console.error(err.response?.data);
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed');
     }
   };
 
@@ -130,7 +143,12 @@ export default function Register() {
           </span>
         </div>
 
-        <select name="role" value={formData.role} onChange={handleChange}>
+        <select
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          required
+        >
           <option value="user">Standard User</option>
           <option value="organizer">Event Organizer</option>
           <option value="admin">Administrator</option>
