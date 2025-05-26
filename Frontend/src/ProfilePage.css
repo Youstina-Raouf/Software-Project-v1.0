@@ -1,36 +1,40 @@
-/* src/ProfilePage.css */
+/* src/ProfilePage.css - Golden Ticket Edition */
 
 .profile-container {
-    max-width: 600px;
-    margin: auto;
-    padding: 1rem;
-    background: #142b5f;
-    border-radius: 12px;
-    color: #e0e0e0;
-    box-shadow: 0 8px 20px rgba(10, 31, 68, 0.8);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  .profile-container h2 {
-    margin-bottom: 1rem;
-    color: #ff4081;
-    font-weight: 700;
-  }
-  
-  .profile-container p {
-    font-size: 1rem;
-    margin: 8px 0;
-  }
-  
-  .profile-container a {
-    display: inline-block;
-    margin-top: 20px;
-    color: #ff4081;
-    font-weight: 600;
-    text-decoration: none;
-  }
-  
-  .profile-container a:hover {
-    text-decoration: underline;
-  }
-  
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);
+  border-radius: 12px;
+  color: #b8860b; /* dark goldenrod for text */
+  box-shadow: 0 8px 20px rgba(184, 134, 11, 0.7);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 2px solid #daa520; /* golden border */
+}
+
+.profile-container h2 {
+  margin-bottom: 1rem;
+  color: #ffd700; /* bright gold */
+  font-weight: 700;
+  text-shadow: 1px 1px 2px #b8860b;
+}
+
+.profile-container p {
+  font-size: 1rem;
+  margin: 8px 0;
+  color: #8b7500; /* rich gold/brown shade */
+}
+
+.profile-container a {
+  display: inline-block;
+  margin-top: 20px;
+  color: #ffbf00; /* golden yellow link */
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.profile-container a:hover {
+  color: #ffd700; /* full gold on hover */
+  text-decoration: underline;
+}

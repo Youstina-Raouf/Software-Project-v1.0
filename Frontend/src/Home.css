@@ -1,8 +1,8 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  color: #fff;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); /* deep blues stay */
+  color: #d4af37; /* gold text instead of white */
   min-height: 100vh;
 }
 
@@ -20,6 +20,7 @@ body {
   max-width: 1800px;
   margin: 0 auto 50px auto;
   position: relative;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.8); /* golden glow */
 }
 
 .carousel-slide {
@@ -39,7 +40,7 @@ body {
   width: 100%;
   height: 400px;
   object-fit: cover;
-  filter: brightness(0.6);
+  filter: brightness(0.5); /* dim for gold text pop */
   border-radius: 20px;
 }
 
@@ -52,35 +53,43 @@ body {
 }
 
 .carousel-text h3 {
-  color: #fff;
+  color: #d4af37; /* gold heading */
   font-size: 2.5rem;
   margin-bottom: 12px;
-  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+  text-shadow: 0 0 10px rgba(0,0,0,0.9);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .glow-btn {
-  background: #ff4ec6;
-  color: white;
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #142b5f; /* deep blue text */
   padding: 12px 30px;
   border: none;
   border-radius: 30px;
   font-weight: bold;
   cursor: pointer;
   font-size: 1rem;
-  box-shadow: 0 0 15px #ff4ec6;
+  box-shadow: 0 0 15px #d4af37;
   transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .glow-btn:hover {
-  background: #c6009f;
+  background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
   transform: scale(1.05);
+  box-shadow: 0 0 25px #d4af37;
 }
 
 .section-title {
   font-size: 2rem;
   margin-bottom: 20px;
-  border-left: 4px solid #ff4ec6;
+  border-left: 4px solid #d4af37; /* gold line */
   padding-left: 12px;
+  color: #d4af37;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .events-grid {
@@ -90,27 +99,31 @@ body {
 }
 
 .event-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(212, 175, 55, 0.1); /* subtle gold glow */
   backdrop-filter: blur(15px);
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  color: #142b5f; /* deep blue text inside cards */
+  font-weight: 600;
 }
 
 .event-card:hover {
   transform: translateY(-5px);
-  border-color: #ff4ec6;
+  border-color: #d4af37;
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.8);
 }
 
 .event-card h4 {
   font-size: 1.3rem;
   margin-bottom: 10px;
+  color: #b8860b;
 }
 
 .event-card p {
-  color: #ccc;
+  color: #4b3a00; /* dark gold text */
   font-size: 0.95rem;
 }
 
@@ -137,32 +150,28 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
-  color: #fff;
+  color: #d4af37;
   position: absolute;
   top: 0;
 }
 
 .top-arrow.left {
-  position: absolute;
   left: -80px;
-  top: 0;
 }
 
 .top-arrow.right {
-  position: absolute;
   right: 0;
-  top: 0;
 }
 
 .top-arrow:hover {
-  background: #ff4ec6;
-  color: #fff;
+  background: #d4af37;
+  color: #142b5f;
   transform: scale(1.08);
 }
 
 .top-arrow i {
   font-size: 2.2rem;
-  color: #fff !important;
+  color: #d4af37 !important;
 }
 
 /* 👇 Hide slick default arrows */
@@ -174,7 +183,7 @@ body {
 .benefits-container {
   text-align: center;
   background: #1f1f2e;
-  color: #fff;
+  color: #d4af37;
   padding: 50px 20px;
   margin: 50px auto;
   border-radius: 12px;
@@ -189,8 +198,8 @@ body {
   display: inline-block;
   margin: 0 10px;
   padding: 12px 28px;
-  color: white;
-  background-color: #ff3399;
+  color: #142b5f;
+  background-color: #d4af37;
   border: none;
   border-radius: 30px;
   text-decoration: none;
@@ -199,7 +208,7 @@ body {
 }
 
 .benefit-btn:hover {
-  background-color: #cc007a;
+  background-color: #b8860b;
 }
 
 /* Carousel Behavior Fixes */
