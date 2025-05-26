@@ -11,7 +11,12 @@ const {
   deleteUser,
   getUserBookings,
   getUserEvents,
-  getUserAnalytics
+  getUserAnalytics,
+  registerUser,
+  loginUser,
+  requestResetOTP,
+  verifyResetOTP,
+  resetPassword
 } = require('../Controllers/userController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -93,5 +98,12 @@ router.put('/:id', protect, authorize('admin'), updateUserRole);
  * @access  Admin
  */
 router.delete('/:id', protect, authorize('admin'), deleteUser);
+
+// Auth routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/request-reset-otp', requestResetOTP);
+router.post('/verify-reset-otp', verifyResetOTP);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

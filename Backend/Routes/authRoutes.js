@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
-const { protect, admin, organizer, user } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const {
   registerUser,
   loginUser,
@@ -10,11 +10,12 @@ const {
   updateUserProfile,
   deleteUserAccount,
   logoutUser,
-  forgetPassword,
+  requestResetOTP,
+  verifyResetOTP,
   resetPassword
 } = require('../Controllers/userController');
 
-// Validation for Register and Login
+// Validation for Register
 const validateRegister = [
   body('email').isEmail().withMessage('Please enter a valid email'),
   body('password')
@@ -22,9 +23,11 @@ const validateRegister = [
     .withMessage('Password must be at least 6 characters long'),
 ];
 
+// Validation for Login
 const validateLogin = [
   body('email').isEmail().withMessage('Please enter a valid email'),
-  body('password').notEmpty().withMessage('Password is required'),
+  body('password').optional().notEmpty().withMessage('Password cannot be empty'),
+  body('otp').optional().isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
 ];
 
 // Error handling for validation
@@ -40,7 +43,8 @@ const handleValidationErrors = (req, res, next) => {
 router.post('/register', validateRegister, handleValidationErrors, registerUser);
 router.post('/login', validateLogin, handleValidationErrors, loginUser);
 router.post('/logout', logoutUser);
-router.put('/forgetPassword', forgetPassword);
+router.post('/request-reset-otp', requestResetOTP);
+router.post('/verify-reset-otp', verifyResetOTP);
 router.post('/reset-password', resetPassword);
 
 // Protected routes (authentication required)

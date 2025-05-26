@@ -11,6 +11,7 @@ const Login = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,16 +24,26 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password, 'password');
       if (result.success) {
-        navigate('/profile');
+        const userRole = result.user.role.toLowerCase();
+        if (userRole === 'admin') {
+          navigate('/admin');
+        } else if (userRole === 'organizer') {
+          navigate('/organizer-dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         setError(result.error);
       }
     } catch (err) {
       setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,6 +52,7 @@ const Login = () => {
       <div className="login-form">
         <h2>Login to Your Account</h2>
         {error && <div className="error-message">{error}</div>}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -51,6 +63,7 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
           <div className="form-group">
@@ -62,10 +75,14 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
+
         <div className="form-footer">
           <Link to="/forgot-password">Forgot Password?</Link>
           <p>

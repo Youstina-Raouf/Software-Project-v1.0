@@ -41,10 +41,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, credential, method = 'password') => {
     try {
       console.log('Attempting login...');
-      const response = await api.post('/api/v1/auth/login', { email, password });
+      let response;
+      
+      if (method === 'password') {
+        response = await api.post('/api/v1/auth/login', { 
+          email, 
+          password: credential 
+        });
+      } else {
+        response = await api.post('/api/v1/auth/login', { 
+          email, 
+          otp: credential 
+        });
+      }
+
       console.log('Login response:', response.data);
       
       const { user } = response.data;

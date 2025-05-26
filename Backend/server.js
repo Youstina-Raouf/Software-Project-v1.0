@@ -8,6 +8,14 @@ const eventRoutes = require('./Routes/eventsRoutes');
 const bookingRoutes = require('./Routes/bookingRoutes');
 const authRoutes = require('./Routes/authRoutes');
 
+// Debug logging for environment variables
+console.log('Environment Variables Check:');
+console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not Set');
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'Not Set');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not Set');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not Set');
+console.log('PORT:', process.env.PORT || 5000);
+
 const app = express();
 
 // Middleware
@@ -22,6 +30,7 @@ app.use(express.json());
 // Logger middleware
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log('Request body:', req.body);
     next();
 });
 
@@ -66,25 +75,29 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`\n Server running on port ${PORT}`);
     console.log('\n Available Routes:');
-    console.log('   Users:');
-    console.log('   - POST /api/v1/register    - Register new user');
-    console.log('   - POST /api/v1/login       - Login user');
-    console.log('   - PUT  /api/v1/forgetPassword - Reset password');
-    console.log('   - GET  /api/v1/users/profile  - Get user profile');
-    console.log('   - PUT  /api/v1/users/profile  - Update profile');
-    console.log('   - GET  /api/v1/users/bookings - Get user bookings');
-    console.log('   - GET  /api/v1/users/events   - Get user events');
+    console.log('   Auth:');
+    console.log('   - POST /api/v1/auth/register         - Register new user');
+    console.log('   - POST /api/v1/auth/login            - Login user');
+    console.log('   - POST /api/v1/auth/request-reset-otp - Request password reset OTP');
+    console.log('   - POST /api/v1/auth/verify-reset-otp  - Verify reset OTP');
+    console.log('   - POST /api/v1/auth/reset-password    - Reset password');
+    console.log('   - POST /api/v1/auth/logout           - Logout user');
+    console.log('   - GET  /api/v1/auth/profile          - Get user profile');
+    console.log('   - PUT  /api/v1/auth/profile          - Update profile');
+    console.log('\n   Users:');
+    console.log('   - GET  /api/v1/users/bookings        - Get user bookings');
+    console.log('   - GET  /api/v1/users/events          - Get user events');
     console.log('   - GET  /api/v1/users/events/analytics - Get event analytics');
     console.log('\n   Events:');
-    console.log('   - GET  /api/v1/events         - Get all approved events');
-    console.log('   - GET  /api/v1/events/all     - Get all events (Admin)');
-    console.log('   - GET  /api/v1/events/:id     - Get event by ID');
-    console.log('   - POST /api/v1/events         - Create event (Organizer)');
-    console.log('   - PUT  /api/v1/events/:id     - Update event (Organizer/Admin)');
-    console.log('   - DEL  /api/v1/events/:id     - Delete event (Organizer/Admin)');
-    console.log('   - PUT  /api/v1/events/:id/status - Update event status (Admin)');
+    console.log('   - GET  /api/v1/events                - Get all approved events');
+    console.log('   - GET  /api/v1/events/all            - Get all events (Admin)');
+    console.log('   - GET  /api/v1/events/:id            - Get event by ID');
+    console.log('   - POST /api/v1/events                - Create event (Organizer)');
+    console.log('   - PUT  /api/v1/events/:id            - Update event (Organizer/Admin)');
+    console.log('   - DEL  /api/v1/events/:id            - Delete event (Organizer/Admin)');
+    console.log('   - PUT  /api/v1/events/:id/status     - Update event status (Admin)');
     console.log('\n   Bookings:');
-    console.log('   - POST /api/v1/bookings       - Book tickets (User)');
-    console.log('   - GET  /api/v1/bookings/:id   - Get booking details (User)');
-    console.log('   - DEL  /api/v1/bookings/:id   - Cancel booking (User)');
+    console.log('   - POST /api/v1/bookings              - Book tickets (User)');
+    console.log('   - GET  /api/v1/bookings/:id          - Get booking details (User)');
+    console.log('   - DEL  /api/v1/bookings/:id          - Cancel booking (User)');
 });
