@@ -1,0 +1,69 @@
+/* src/UpdateProfileForm.css - Golden Ticket Style */
+
+.update-profile-form {
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);
+  border-radius: 12px;
+  color: #b8860b; /* dark goldenrod text */
+  box-shadow: 0 8px 20px rgba(184, 134, 11, 0.7);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 2px solid #daa520; /* golden border */
+}
+
+.update-profile-form h2 {
+  margin-bottom: 1rem;
+  color: #ffd700; /* bright gold */
+  font-weight: 700;
+  text-shadow: 1px 1px 2px #b8860b;
+}
+
+.update-profile-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid #b8860b; /* golden border */
+  background-color: #fff9e6; /* light gold background */
+  color: #6b4f00; /* darker golden text */
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.update-profile-form input:focus {
+  border-color: #ffd700;
+  outline: none;
+  box-shadow: 0 0 8px #ffd700;
+}
+
+.update-profile-form button {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%);
+  color: #4b2e00;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(241, 196, 15, 0.6);
+}
+
+.update-profile-form button:hover {
+  background: linear-gradient(135deg, #d4ac0d 0%, #f1c40f 100%);
+  box-shadow: 0 6px 16px rgba(241, 196, 15, 0.8);
+}
+
+.update-profile-form p {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.update-profile-form p.error {
+  color: #ff6f91; /* keep pinkish for error */
+}
+
+.update-profile-form p.success {
+  color: #6fff8e; /* keep green for success */
+}

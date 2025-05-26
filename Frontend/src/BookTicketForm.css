@@ -1,0 +1,120 @@
+.book-ticket-form {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3);
+  max-width: 400px;
+  margin: 20px auto;
+  border: 2px solid #f1c40f;
+}
+
+.book-ticket-form h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 0 3px rgba(241, 196, 15, 0.7);
+}
+
+.ticket-info {
+  background-color: #fff9e6;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #f1c40f;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.ticket-info p {
+  margin: 5px 0;
+  color: #b8860b;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #b8860b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #f1c40f;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+.total-price {
+  background-color: #fff9e6;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 20px 0;
+  text-align: center;
+  border: 1px solid #f1c40f;
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 1.2em;
+  text-shadow: 0 0 3px rgba(241, 196, 15, 0.7);
+}
+
+.book-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #f1c40f, #d4af37);
+  color: #2c3e50;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 8px rgba(241, 196, 15, 0.5);
+  transition: background 0.3s ease;
+}
+
+.book-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d4af37, #f39c12);
+  color: #1b1b1b;
+}
+
+.book-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  color: #666;
+  box-shadow: none;
+}
+
+.sold-out {
+  color: #b22222;
+  text-align: center;
+  font-weight: 700;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 480px) {
+  .book-ticket-form {
+    margin: 10px;
+    padding: 15px;
+  }
+}

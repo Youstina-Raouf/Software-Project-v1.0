@@ -1,0 +1,138 @@
+/* Login.css - Gold Edition */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #0a1f44;
+  margin: 0;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-container {
+  background: #142b5f;
+  padding: 40px 50px 60px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(10, 31, 68, 0.8);
+  width: 360px;
+  text-align: center;
+  margin: auto;
+}
+
+.login-container h2 {
+  margin-bottom: 20px;
+  color: #FFD700; /* Gold title */
+  font-weight: 700;
+}
+
+.login-container input[type="email"],
+.login-container input[type="password"],
+.login-container input[type="text"],
+.login-container select {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid #38558c;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  background-color: #0a1f44;
+  color: #e0e0e0;
+  transition: border-color 0.3s ease;
+}
+
+.login-container input[type="email"]:focus,
+.login-container input[type="password"]:focus,
+.login-container input[type="text"]:focus,
+.login-container select:focus {
+  border-color: #FFD700; /* Gold border on focus */
+  outline: none;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #FFD700; /* Gold button */
+  border: none;
+  border-radius: 8px;
+  color: #0a1f44; /* Dark text on gold */
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
+}
+
+.login-container button:hover {
+  background-color: #e6c200; /* Darker gold on hover */
+  box-shadow: 0 6px 16px rgba(230, 194, 0, 0.8);
+}
+
+.error-message {
+  color: #ff6f91;
+  margin-bottom: 15px;
+}
+
+.forgot-password-link {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.forgot-password-link a {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+  color: #FFD700; /* Gold hover */
+  text-decoration: underline;
+}
+
+.signup-text {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.signup-text a {
+  color: #FFD700; /* Gold links */
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+.password-field {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.password-field input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 40px;
+  border: 1px solid #38558c;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #0a1f44;
+  color: #e0e0e0;
+  box-sizing: border-box;
+}
+
+.toggle-eye {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
